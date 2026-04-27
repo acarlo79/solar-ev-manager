@@ -1,1 +1,1 @@
-# sola-ev-manager
+# solar-ev-manager
