@@ -80,13 +80,14 @@ class SolarEVManagerSwitch(SwitchEntity):
         if not self._is_on:
             return
             
-        # ==========================================
+# ==========================================
         # 1. THE STRICT CABLE SHIELD ("Allow-List")
         # ==========================================
         cable_state = self.hass.states.get(self.conf["tesla_cable"])
         
-        if cable_state and cable_state.state.lower() != "connected":
-            _LOGGER.debug(f"Tesla cable is '{cable_state.state}'. Waiting for 'Connected'.")
+        # Check if the state is either "on" (binary_sensor) or "connected" (standard sensor)
+        if cable_state and cable_state.state.lower() not in ["on", "connected"]:
+            _LOGGER.debug(f"Tesla cable is '{cable_state.state}'. Waiting for 'Connected' or 'On'.")
             
             # Instantly cancel any running 10-second timers if unplugged
             if self._adjust_task:
