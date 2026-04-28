@@ -2,7 +2,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 
 DOMAIN = "solar_ev_manager"
-PLATFORMS = ["switch"]
+PLATFORMS = ["switch", "sensor"]
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Solar EV Manager from a UI config entry."""
