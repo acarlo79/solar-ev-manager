@@ -2,67 +2,48 @@
 
 # ☀️ Solar EV Manager for Home Assistant
 
-A custom Home Assistant integration designed to flawlessly route your excess solar energy directly into your car. It dynamically adjusts your charging speed second-by-second to match your roof's production, completely eliminating accidental grid imports while your house appliances take priority. 
+A high-performance custom integration for Home Assistant designed to route excess solar energy into your Tesla. This integration balances real-time solar production with home battery preservation and Tesla API safety.
 
-⚠️ **Compatibility Notice: This integration is currently ONLY compatible with Tesla vehicles.** It specifically utilizes the Tesla Fleet API's native ability to adjust charging amps dynamically on the fly. 
+⚠️ **Compatibility Notice:** This integration is designed specifically for **Tesla vehicles** using the Tesla Fleet API.
 
 ## 🎯 The Goal
-The primary goal of this project is to solve the "Octopus vs. Solar" conflict. 
-
-Many EV owners use smart tariffs (like Octopus Intelligent) for cheap overnight charging, but those smart schedules often fight with daytime solar charging setups. This integration acts as the ultimate referee:
-* **During the Day:** It pauses the Octopus schedule and precisely throttles your Tesla's charging amps to perfectly surf your solar export curve.
-* **At Night (or when disabled):** It instantly pauses the car and hands control back to Octopus Energy, allowing it to schedule your cheap overnight top-up.
+This project solves the "Octopus vs. Solar" conflict. It ensures that during the day, your car only charges from free sunshine, but when the sun goes down, it steps aside to allow smart tariffs (like Octopus Intelligent) to manage your cheap overnight charging.
 
 ## ✨ Key Features
 
-* **100% UI Configurable:** No YAML required! Fully translated, step-by-step setup wizard right inside Home Assistant.
-* **Smart Battery Protection:** Prevents the dreaded "Battery Feedback Loop." It monitors your home battery and automatically subtracts battery discharge from the math, ensuring your car never drains your house battery.
-* **Contactor & API Protection (Debouncing):** Features a built-in 10-second stabilization timer. If a cloud rolls over, the script waits 10 seconds to ensure the weather change is permanent before waking/pausing the car, saving your hardware and protecting you from Tesla API rate limits.
-* **Live UI Dashboard Sensors:** Includes two live diagnostic sensors (`Excess Watts` and `Target Amps`) that you can place on your dashboard to watch the logic engine perform its math in real-time.
-* **Strict Cable Shield:** Actively monitors your charging port (supporting both standard and binary sensors). If the car is unplugged or asleep, it instantly halts all math to protect the API.
+* **Rolling Data Smoothing (C):** Uses a 2-minute rolling average of your power data. This prevents the car from reacting to "jittery" solar spikes, resulting in a smooth, stable charging curve.
+* **API & Contactor Protection (A):** Features a 5-minute (300s) safety buffer. The integration will wait for 5 minutes of consistent low-solar data before pausing the car. This prevents mechanical wear on your car's contactors and protects your Tesla Fleet API rate limits.
+* **Smart Amperage Deadband (B):** Only sends a command to change the car's charging speed if the required change is 2 Amps or greater. This eliminates unnecessary "micro-adjustments" and keeps your API usage low.
+* **Battery Feedback Protection:** Automatically detects when your house battery is discharging to cover the car's load and throttles the car back to protect your home storage.
+* **Live Diagnostic Sensors:** Provides real-time `Excess Watts` and `Target Amps` entities for your dashboard, showing you exactly how the rolling average is calculating your power.
 
 ## ⚙️ How It Works
-This integration does not rely on cloud guessing or delayed inverter data. It calculates your exact excess power using live hardware clamps to ensure your home *always* gets priority.
 
-1. **Live Math:** `(Grid Export * -1) + (Current EV Load) + (Battery Discharge)`. By calculating this every few seconds, it determines the *True Excess* solar available.
-2. **Voltage Accuracy:** It divides your True Excess Watts by your *Live Grid Voltage* to calculate the exact Amps available, preventing mathematical overdraws caused by voltage fluctuations.
-3. **Dynamic Throttling:** It seamlessly slides your Tesla's charging limit up and down between 5A and 32A to perfectly match the sun.
+1. **The Calculation:** The engine calculates `(Grid Export * -1) + (EV Load) + (Battery Discharge)`.
+2. **The Smoothing:** That value is added to a 120-second history window. The script uses the **average** of that window to determine the next move.
+3. **The Buffer:** If the average suggests a change, a 5-minute timer starts. If the solar levels recover before the timer ends, the command is cancelled, and the car's charging session remains uninterrupted.
+4. **The Handoff:** When enabled, it turns OFF the Octopus Intelligent Smart Charge switch to take control. When disabled, it turns it back ON to allow overnight scheduling.
 
-## 📋 Required Entities & Sensor Details
+## 📋 Required Entities
 
-During setup, you will map the following entities using the UI wizard:
+### 1. Power Sensors
+* **Grid Power Sensor:** Must be in **Watts (W)**. Negative (-) for Export, Positive (+) for Import.
+* **EV Power Sensor:** Must be in **Watts (W)**. Measures the car's live draw.
+* **Live Voltage Sensor:** Must be in **Volts (V)**.
+* **House Battery Sensor:** Must be in **Kilowatts (kW)**. Negative (-) for Discharging, Positive (+) for Charging.
 
-### 1. Hardware Power Sensors
-* **Grid Power Sensor (`sensor`)**
-  * **Required Format:** Must report in **Watts (W)**. Must report **Negative (-)** numbers when exporting to the grid, and **Positive (+)** when importing. 
-* **EV Power Sensor (`sensor`)**
-  * **Required Format:** Must report the live consumption of the charger in **Watts (W)**.
-* **Live Voltage Sensor (`sensor`)**
-  * **Required Format:** Must report live house voltage in **Volts (V)**.
-* **House Battery Sensor (`sensor`)**
-  * **Required Format:** Must report in **Kilowatts (kW)**. Must report **Negative (-)** numbers when the battery is *Discharging* into the house, and **Positive (+)** when charging.
-
-### 2. Tesla Integration Entities
-* **Tesla Charge Switch (`switch`):** Turns charging on and off.
-* **Tesla Amps Slider (`number`):** The slider that controls the charging speed (5A - 32A).
-* **Tesla Cable Sensor (`sensor` or `binary_sensor`):** Detects if the charging cable is physically plugged into the car. *Note: The integration will only run if this sensor reports exactly `Connected` or `On`.*
-
-### 3. Octopus Energy Entities
-* **Intelligent Smart Charge Switch (`switch`):** The master switch provided by the Octopus Energy integration.
+### 2. Tesla & Octopus Entities
+* **Tesla Charge Switch:** The main toggle to start/stop charging.
+* **Tesla Amps Slider:** The `number` entity controlling the charging limit.
+* **Tesla Cable Sensor:** Supports `sensor` or `binary_sensor`. The integration only runs when state is `Connected` or `On`.
+* **Octopus Intelligent Switch:** The master switch to enable/disable smart charging.
 
 ## 🚀 Installation
 
-1. Add this repository to [HACS](https://hacs.xyz/) as a Custom Repository (Category: Integration).
-2. Download **Solar EV Manager** through HACS.
-3. Completely **Restart Home Assistant**.
-4. Go to **Settings > Devices & Services**.
-5. Click **+ Add Integration**, search for "Solar EV Manager", and follow the UI wizard.
+1. Add this URL as a Custom Repository in **HACS**.
+2. Download and **Restart Home Assistant**.
+3. Go to **Settings > Devices & Services > Add Integration**.
+4. Search for **Solar EV Manager** and follow the UI setup wizard.
 
 ## 🕹️ Usage
-
-Once installed, the integration generates a Master Switch and two Diagnostic Sensors. Group them together on your dashboard!
-
-* **Master Switch ON (Morning):** Octopus is suspended, the sensors wake up, and the car tracks the sun.
-* **Master Switch OFF (Evening):** Solar tracking stops, the car pauses, and Octopus takes over to schedule your cheap night charging.
-* **Target Amps Sensor:** Watch this to see exactly what charging speed the script is calculating.
-* **Excess Watts Sensor:** Watch this to see exactly how much true solar excess is available at your meter.
+Turn the **Solar EV Manager Master Switch** ON in the morning. The integration will immediately suspend your Octopus schedule and begin stalking the sun. In the evening, turn it OFF to allow your car to charge at off-peak rates.
