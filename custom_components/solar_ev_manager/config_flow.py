@@ -15,6 +15,7 @@ class SolarEVManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             vol.Required("grid_sensor"): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
             vol.Required("ev_sensor"): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
             vol.Required("voltage_sensor"): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")),
+            vol.Required("battery_sensor"): selector.EntitySelector(selector.EntitySelectorConfig(domain="sensor")), # BATTERY ADDED HERE
             vol.Required("octopus_switch"): selector.EntitySelector(selector.EntitySelectorConfig(domain="switch")),
             vol.Required("tesla_switch"): selector.EntitySelector(selector.EntitySelectorConfig(domain="switch")),
             vol.Required("tesla_amps"): selector.EntitySelector(selector.EntitySelectorConfig(domain="number")),
