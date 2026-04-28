@@ -68,12 +68,6 @@ class SolarEVManagerSwitch(SwitchEntity):
         if not self._is_on:
             return
             
-        cable_state = self.hass.states.get(self.conf["tesla_cable"])
-        if cable_state and cable_state.state.lower() == "disconnected":
-            _LOGGER.debug("Tesla cable is disconnected. Returning 0.")
-            async_dispatcher_send(self.hass, self._signal_name, 0.0, 0)
-            return
-            
         grid_state = self.hass.states.get(self.conf["grid_sensor"])
         ev_state = self.hass.states.get(self.conf["ev_sensor"])
         volt_state = self.hass.states.get(self.conf["voltage_sensor"])
