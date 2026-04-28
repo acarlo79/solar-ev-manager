@@ -1,3 +1,4 @@
+![Logo](https://raw.githubusercontent.com/acarlo79/solar-ev-manager/main/icon.png)
 # Solar EV Manager
 
 A custom Home Assistant integration that automatically manages your EV charging based on excess solar power, cleanly handing off control to Octopus Intelligent when the sun goes down.
