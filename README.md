@@ -1,5 +1,3 @@
-![Logo](https://raw.githubusercontent.com/acarlo79/solar-ev-manager/main/icon.png)
-
 # ☀️ Solar EV Manager for Home Assistant
 
 A high-performance custom integration for Home Assistant designed to route excess solar energy into your Tesla. This integration balances real-time solar production with home battery preservation and Tesla API safety.
