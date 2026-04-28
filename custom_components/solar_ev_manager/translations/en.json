@@ -1,0 +1,28 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Configure Solar EV Manager",
+        "description": "Select the correct entities from your Home Assistant system to enable dynamic solar charging.",
+        "data": {
+          "grid_sensor": "Main Grid Power Sensor",
+          "ev_sensor": "EV Charger Power Sensor",
+          "voltage_sensor": "Live Grid Voltage Sensor",
+          "octopus_switch": "Octopus Intelligent Switch",
+          "tesla_switch": "Tesla Charge Switch",
+          "tesla_amps": "Tesla Charging Amps Slider",
+          "tesla_cable": "Tesla Cable Sensor"
+        },
+        "data_description": {
+          "grid_sensor": "Must read Negative (-) when exporting to the grid, and Positive (+) when importing (e.g., Shelly EM Main Clamp).",
+          "ev_sensor": "The sensor measuring the live Wattage of your EV charger circuit.",
+          "voltage_sensor": "The sensor measuring your live house voltage (Volts).",
+          "octopus_switch": "The master Smart Charge switch provided by the Octopus Energy integration.",
+          "tesla_switch": "The switch that starts and stops the charging session.",
+          "tesla_amps": "The number slider that controls the charging limit (typically 5A to 32A).",
+          "tesla_cable": "The sensor that reports if the car is plugged in (Must report 'Disconnected' when unplugged)."
+        }
+      }
+    }
+  }
+}
